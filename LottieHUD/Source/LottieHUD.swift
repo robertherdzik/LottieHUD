@@ -12,13 +12,17 @@ import UIKit
 
 class LottieHUD {
     
-    var animationDuration: TimeInterval = 0.3
-    static var shadow: CGFloat = 0.7
-    
+    struct Constants {
+        static let lottieSideHeight: CGFloat = 200
+        
+        static let shadow: CGFloat = 0.7
+        static let animationDuration: TimeInterval = 0.3
+    }
+
     private var backgroundView: UIView = {
         let bg = UIView()
-        bg.translatesAutoresizingMaskIntoConstraints = false
-        bg.backgroundColor = UIColor.black.withAlphaComponent(shadow)
+        bg.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+        bg.backgroundColor = UIColor.black.withAlphaComponent(Constants.shadow)
         bg.isUserInteractionEnabled = false
         bg.alpha = 0.0
         return bg
@@ -58,15 +62,9 @@ class LottieHUD {
     
     private func createHUD(delay: TimeInterval = 0.0) {
         DispatchQueue.main.async {
-            UIApplication.shared.keyWindow!.isUserInteractionEnabled = false
-            self.backgroundView.addSubview(self._lottie)
-            self._lottie.frame = self.frame
+            self.addLottieToHierarchy()
             
-            self.keyWindow.view.addSubview(self.backgroundView)
-            self.backgroundView.frame = self.keyWindow.view.bounds
-            self._lottie.center = self.backgroundView.center
-            
-            UIView.animate(withDuration: self.animationDuration, delay: delay, options: .curveEaseIn, animations: {
+            UIView.animate(withDuration: Constants.animationDuration, delay: delay, options: .curveEaseIn, animations: {
                 self.backgroundView.alpha = 1.0
             }, completion: nil)
             
@@ -78,7 +76,7 @@ class LottieHUD {
     
     private func clearHUD() {
         DispatchQueue.main.async {
-            UIView.animate(withDuration: self.animationDuration, delay: 0, options: .curveEaseIn, animations: {
+            UIView.animate(withDuration: Constants.animationDuration, delay: 0, options: .curveEaseIn, animations: {
                 self.backgroundView.alpha = 0.0
             }) { finished in
                 UIApplication.shared.keyWindow!.isUserInteractionEnabled = true
@@ -86,6 +84,45 @@ class LottieHUD {
                 self._lottie.stop()
             }
         }
+    }
+    
+    private func addLottieToHierarchy() {
+        UIApplication.shared.keyWindow!.isUserInteractionEnabled = false
+        backgroundView.addSubview(_lottie)
+        backgroundView.frame = keyWindow.view.bounds
+        keyWindow.view.addSubview(backgroundView)
+        
+        _lottie.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            NSLayoutConstraint(item: _lottie,
+                               attribute: .height,
+                               relatedBy: .equal,
+                               toItem: nil,
+                               attribute: .height,
+                               multiplier: 1,
+                               constant: Constants.lottieSideHeight),
+            NSLayoutConstraint(item: _lottie,
+                               attribute: .width,
+                               relatedBy: .equal,
+                               toItem: nil,
+                               attribute: .width,
+                               multiplier: 1,
+                               constant: Constants.lottieSideHeight),
+            NSLayoutConstraint(item: _lottie,
+                               attribute: .centerX,
+                               relatedBy: .equal,
+                               toItem: backgroundView,
+                               attribute: .centerX,
+                               multiplier: 1,
+                               constant: 0),
+            NSLayoutConstraint(item: _lottie,
+                               attribute: .centerY,
+                               relatedBy: .equal,
+                               toItem: backgroundView,
+                               attribute: .centerY,
+                               multiplier: 1,
+                               constant: 0)
+            ])
     }
     
     private var keyWindow: UIViewController {
@@ -110,3 +147,4 @@ extension UIApplication {
         return controller
     }
 }
+
